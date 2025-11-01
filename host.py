@@ -40,7 +40,7 @@ def run_bot(bot_name: str, token: str):
         from bot6 import main as bot_main
 
     print(f"✅ {bot_name} запущен")
-    bot_main(token)  # Передаем токен в функцию main
+    bot_main()
 
 
 def main():

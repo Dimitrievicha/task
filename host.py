@@ -20,42 +20,76 @@ BOT_TOKENS = {
 }
 
 
-async def run_bot(token: str, bot_name: str):
-    """Запуск одного бота"""
-    if not token:
-        print(f"❌ Токен для {bot_name} не установлен")
-        return
+class BotManager:
+    def __init__(self, token: str, bot_name: str):
+        self.token = token
+        self.bot_name = bot_name
+        self.app = None
 
-    app = Application.builder().token(token).build()
+    async def start(self):
+        """Запуск одного бота"""
+        if not self.token:
+            print(f"❌ Токен для {self.bot_name} не установлен")
+            return
 
-    # Команды для бота
-    async def start(update, context):
-        await update.message.reply_text(f"Я {bot_name}! 🚀")
+        self.app = Application.builder().token(self.token).build()
 
-    async def help(update, context):
-        await update.message.reply_text(f"Это помощь для {bot_name}")
+        # Команды для бота
+        async def start_command(update, context):
+            await update.message.reply_text(f"Я {self.bot_name}! 🚀")
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help))
+        async def help_command(update, context):
+            await update.message.reply_text(f"Это помощь для {self.bot_name}")
 
-    print(f"✅ {bot_name} запущен")
-    await app.run_polling()
+        self.app.add_handler(CommandHandler("start", start_command))
+        self.app.add_handler(CommandHandler("help", help_command))
+
+        print(f"✅ {self.bot_name} запущен")
+
+        # Запускаем polling в отдельной задаче
+        await self.app.initialize()
+        await self.app.start()
+        await self.app.updater.start_polling()
+
+    async def stop(self):
+        """Остановка бота"""
+        if self.app:
+            await self.app.updater.stop()
+            await self.app.stop()
+            await self.app.shutdown()
 
 
 async def main():
     """Запуск всех ботов"""
-    tasks = []
+    bots = []
 
+    # Создаем менеджеры для всех ботов
     for bot_name, token in BOT_TOKENS.items():
-        if token:  # Запускаем только если токен установлен
-            task = run_bot(token, bot_name)
-            tasks.append(task)
+        if token:
+            bot_manager = BotManager(token, bot_name)
+            bots.append(bot_manager)
 
-    if tasks:
-        print(f"🚀 Запускаю {len(tasks)} ботов...")
-        await asyncio.gather(*tasks)
-    else:
+    if not bots:
         print("❌ Не найдено ни одного токена для запуска")
+        return
+
+    print(f"🚀 Запускаю {len(bots)} ботов...")
+
+    # Запускаем всех ботов
+    for bot in bots:
+        await bot.start()
+
+    print("✅ Все боты запущены и работают")
+
+    # Бесконечный цикл чтобы боты продолжали работать
+    try:
+        while True:
+            await asyncio.sleep(3600)  # Спим 1 час
+    except KeyboardInterrupt:
+        print("\n🛑 Останавливаю ботов...")
+        # Останавливаем всех ботов
+        for bot in bots:
+            await bot.stop()
 
 
 if __name__ == "__main__":

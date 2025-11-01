@@ -11,7 +11,7 @@ logging.basicConfig(
 
 # Токены всех ботов
 BOT_TOKENS = {
-    "bot1": os.environ.get("8292014510:AAHz-5Vd9NRo7IktViqxosM1m9pBkEq9vis"),
+    "bot1": os.environ.get("BOT1_TOKEN"),
     "bot2": os.environ.get("7704700673:AAFxkPbz8jjLziEIaidYvxh9Z_rBiJgqhbo"),
     "bot3": os.environ.get("8016674756:AAFMnoRz7M23WIjknac9uEterl63FR88zfc"),
     "bot4": os.environ.get("8213746380:AAHn75hYRMGkeB9sbxyMdzrREwT6jtn4kt8"),

@@ -45,7 +45,7 @@ STATEMENTS = [
         "answer": False
     },
     {
-        "statement": "8) Дима Любит число 17",
+        "statement": "8) Дима любит число 17",
         "answer": False
     },
     {
@@ -69,7 +69,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     start_text = (
         "Сейчас проверим, насколько хорошо ты знаешь Диму!\n"
         "Я буду говорить утверждения, а ты выбирай - Правда это или Ложь.\n\n"
-        "Готов проверить свои знания?"
     )
 
     # Отправляем начальное сообщение с кнопкой

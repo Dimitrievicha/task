@@ -1,7 +1,6 @@
 import os
-import asyncio
+import multiprocessing
 import logging
-from telegram.ext import Application, CommandHandler
 
 # Настройка логирования
 logging.basicConfig(
@@ -20,77 +19,53 @@ BOT_TOKENS = {
 }
 
 
-class BotManager:
-    def __init__(self, token: str, bot_name: str):
-        self.token = token
-        self.bot_name = bot_name
-        self.app = None
-
-    async def start(self):
-        """Запуск одного бота"""
-        if not self.token:
-            print(f"❌ Токен для {self.bot_name} не установлен")
-            return
-
-        self.app = Application.builder().token(self.token).build()
-
-        # Команды для бота
-        async def start_command(update, context):
-            await update.message.reply_text(f"Я {self.bot_name}! 🚀")
-
-        async def help_command(update, context):
-            await update.message.reply_text(f"Это помощь для {self.bot_name}")
-
-        self.app.add_handler(CommandHandler("start", start_command))
-        self.app.add_handler(CommandHandler("help", help_command))
-
-        print(f"✅ {self.bot_name} запущен")
-
-        # Запускаем polling в отдельной задаче
-        await self.app.initialize()
-        await self.app.start()
-        await self.app.updater.start_polling()
-
-    async def stop(self):
-        """Остановка бота"""
-        if self.app:
-            await self.app.updater.stop()
-            await self.app.stop()
-            await self.app.shutdown()
-
-
-async def main():
-    """Запуск всех ботов"""
-    bots = []
-
-    # Создаем менеджеры для всех ботов
-    for bot_name, token in BOT_TOKENS.items():
-        if token:
-            bot_manager = BotManager(token, bot_name)
-            bots.append(bot_manager)
-
-    if not bots:
-        print("❌ Не найдено ни одного токена для запуска")
+def run_bot(bot_name: str, token: str):
+    """Запуск одного бота в отдельном процессе"""
+    if not token:
+        print(f"❌ Токен для {bot_name} не установлен")
         return
 
-    print(f"🚀 Запускаю {len(bots)} ботов...")
+    # Импортируем соответствующий модуль бота
+    if bot_name == "bot1":
+        from bot1 import main as bot_main
+    elif bot_name == "bot2":
+        from bot2 import main as bot_main
+    elif bot_name == "bot3":
+        from bot3 import main as bot_main
+    elif bot_name == "bot4":
+        from bot4 import main as bot_main
+    elif bot_name == "bot5":
+        from bot5 import main as bot_main
+    elif bot_name == "bot6":
+        from bot6 import main as bot_main
 
-    # Запускаем всех ботов
-    for bot in bots:
-        await bot.start()
+    print(f"✅ {bot_name} запущен")
+    bot_main(token)  # Передаем токен в функцию main
 
-    print("✅ Все боты запущены и работают")
 
-    # Бесконечный цикл чтобы боты продолжали работать
-    try:
-        while True:
-            await asyncio.sleep(3600)  # Спим 1 час
-    except KeyboardInterrupt:
-        print("\n🛑 Останавливаю ботов...")
-        # Останавливаем всех ботов
-        for bot in bots:
-            await bot.stop()
+def main():
+    """Запуск всех ботов в отдельных процессах"""
+    processes = []
+
+    for bot_name, token in BOT_TOKENS.items():
+        if token:
+            process = multiprocessing.Process(
+                target=run_bot,
+                args=(bot_name, token)
+            )
+            processes.append(process)
+            process.start()
+            print(f"🚀 Процесс для {bot_name} запущен")
+
+    if processes:
+        print(f"✅ Запущено {len(processes)} ботов в отдельных процессах")
+
+        # Ждем завершения всех процессов
+        for process in processes:
+            process.join()
+    else:
+        print("❌ Не найдено ни одного токена для запуска")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
